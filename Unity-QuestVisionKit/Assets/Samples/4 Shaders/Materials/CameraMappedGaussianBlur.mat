@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: CameraMappedGaussianBlur
-  m_Shader: {fileID: 4800000, guid: 988799b7b8e99d849bc823c269b93882, type: 3}
+  m_Shader: {fileID: 4800000, guid: 3ae6cc7c8c7db2a49814931ad1eb04e5, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -25,7 +25,11 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
+    - _BlurFeather: 0.1
     - _BlurIntensity: 10
-    m_Colors: []
+    - _BlurSamples: 16
+    - _TunnelRadius: 0.3
+    m_Colors:
+    - _TintColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: CameraMappedWater
-  m_Shader: {fileID: 4800000, guid: 74b4bd1d58070834ebb7f62bc9b84ef5, type: 3}
+  m_Shader: {fileID: 4800000, guid: 6f47ce10cc7d09345a6a50a52590e47b, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -34,8 +34,14 @@ Material:
     m_Ints: []
     m_Floats:
     - _ColorTint: 0.75
+    - _DistortionFeather: 0.1
+    - _DistortionK1: 0.8
+    - _DistortionK2: 0.2
     - _NormalIntensity: 0.025
+    - _TunnelRadius: 0.4
     - _WaterSpeed: 0.1
-    m_Colors: []
+    m_Colors:
+    - _DistortionCenter: {r: 0.5, g: 0.5, b: 0, a: 0}
+    - _TintColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

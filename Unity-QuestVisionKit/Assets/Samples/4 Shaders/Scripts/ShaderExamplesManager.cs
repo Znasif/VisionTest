@@ -18,12 +18,16 @@ public class ShaderExamplesManager : MonoBehaviour
 
     public void RightButtonPressed()
     {
+        initialPos = shaderExamples[currentExampleIndex].transform.position;
+        initialRot = shaderExamples[currentExampleIndex].transform.rotation;
         currentExampleIndex = (currentExampleIndex >= shaderExamples.Length-1) ? 0 : currentExampleIndex + 1;
         EnableCurrentExamples();
     }
 
     public void LeftButtonPressed()
     {
+        initialPos = shaderExamples[currentExampleIndex].transform.position;
+        initialRot = shaderExamples[currentExampleIndex].transform.rotation;
         currentExampleIndex = (currentExampleIndex <= 0) ? shaderExamples.Length-1 : currentExampleIndex - 1;
         EnableCurrentExamples();
     }
