@@ -47,6 +47,13 @@
       },
       "url": "https://packages.unity.com"
     },
+    "com.meta.xr.simulator": {
+      "version": "81.0.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
     "com.unity.ai.assistant": {
       "version": "1.0.0-pre.12",
       "depth": 0,

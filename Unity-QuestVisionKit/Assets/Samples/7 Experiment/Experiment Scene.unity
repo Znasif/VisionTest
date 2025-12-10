@@ -3205,8 +3205,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: com.frl.aepsych.Runtime::AEPsych.AEPsychClient
   currentStrat: -1
-  server_address: 4.tcp.ngrok.io
-  server_port: 10425
+  server_address: 8.tcp.ngrok.io
+  server_port: 18010
   finished: 0
   loadExistingDB: 0
   debugEnabled: 0
@@ -3695,7 +3695,7 @@ Transform:
   m_GameObject: {fileID: 1679745465}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 1.12}
+  m_LocalPosition: {x: 0, y: 0, z: 3.58}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -5336,6 +5336,82 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1561414494}
     m_Modifications:
+    - target: {fileID: 1857604205525470328, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2248626661033307878, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2248626661033307878, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2802165587116584158, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2802165587116584158, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2802165587116584158, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2802165587116584158, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2802165587116584158, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.04
+      objectReference: {fileID: 0}
+    - target: {fileID: 2802165587116584158, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.04
+      objectReference: {fileID: 0}
+    - target: {fileID: 2802165587116584158, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.04
+      objectReference: {fileID: 0}
+    - target: {fileID: 2802165587116584158, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2802165587116584158, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 2802165587116584158, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 2802165587116584158, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2802165587116584158, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2802165587116584158, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2802165587116584158, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0.211
+      objectReference: {fileID: 0}
+    - target: {fileID: 2802165587116584158, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 2802165587116584158, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2819356971132317985, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.05
@@ -5384,11 +5460,64 @@ PrefabInstance:
       propertyPath: passthroughCameraManager
       value: 
       objectReference: {fileID: 2114375824}
+    - target: {fileID: 5659701557340497728, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5858175966900626835, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6385339328703841626, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2248626661033307878, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1769394910833862619}
   m_SourcePrefab: {fileID: 100100000, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+--- !u!224 &1769394910833862617 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 2802165587116584158, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+  m_PrefabInstance: {fileID: 1769394910833862616}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1769394910833862618 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2248626661033307878, guid: f0dd0378f1aac26438ab052d6c8f7f54, type: 3}
+  m_PrefabInstance: {fileID: 1769394910833862616}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1769394910833862619
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1769394910833862618}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee10491ef6d5d1d49a270cf6b09bdc19, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Oculus.VR::OVROverlayCanvas
+  _enableMipmapping: 0
+  _dynamicResolution: 1
+  _redrawResolutionThreshold: 2147483647
+  rectTransform: {fileID: 1769394910833862617}
+  maxTextureSize: 2048
+  manualRedraw: 0
+  renderInterval: 1
+  renderIntervalFrameOffset: 0
+  expensive: 0
+  layer: 5
+  opacity: 2
+  shape: 0
+  curveRadius: 1
+  overlapMask: 0
+  overlayType: 1
+  _overlayEnabled: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
