@@ -1,4 +1,158 @@
-QuestCameraKit is a collection of template and reference projects demonstrating how to use Meta Quest’s new **Passthrough Camera API** `(PCA)` for advanced AR/VR vision, tracking, and shader effects.
+# VisionTest — Adaptive Color Discrimination on Meta Quest 3
+
+This repository contains a Unity project for running an adaptive **3AFC color discrimination experiment** on the Meta Quest 3 in mixed reality, as part of the system described in:
+
+> **Hong et al. (2025)** — *Comprehensive characterization of human color discrimination thresholds*
+> bioRxiv. [https://doi.org/10.1101/2025.07.16.665219](https://www.biorxiv.org/content/10.1101/2025.07.16.665219v2)
+
+The companion Python server (AEPsych + WPPM fitting) lives here: [github.com/Znasif/aepsych](https://github.com/Znasif/aepsych)
+
+---
+
+## Motivation
+
+Color discrimination thresholds — the smallest detectable color differences — underlie models of color vision, clinical diagnostics, and display calibration. A comprehensive characterization across the full stimulus space has long been intractable due to the **psychophysical curse of dimensionality**.
+
+This project implements an immersive, headset-based stimulus presentation front-end for the adaptive experiment. The Meta Quest 3 runs the task in mixed reality while an AEPsych server (running on a connected PC over a TCP bridge) selects maximally informative stimuli on every trial. After data collection, a Wishart Process Psychophysical Model (WPPM) is fit post-hoc to recover the full discrimination surface with only ~6,000 trials per participant.
+
+---
+
+## What the Experiment Looks Like
+
+![WPPM fitted threshold ellipses](https://raw.githubusercontent.com/Znasif/aepsych/main/WPPM.gif)
+
+The participant sees three colored circles in mixed reality. Two are the **reference** color and one is the **comparison** (odd one out). The task is to identify which circle is different. Responses are sent back to the AEPsych server to update the GP model and select the next trial.
+
+---
+
+## System Overview
+
+```
+Meta Quest 3 (this repo)                Python server (aepsych repo)
+────────────────────────                ────────────────────────────
+Unity 3AFC experiment                   AEPsych server on port 5555
+│                                       │
+│  ←── next trial (x0, delta) ─────────┤  (WSL + conda activate braille)
+│  ──── response (correct/incorrect) ──→│
+│                                       ├── realtime_visualizer.py
+│  (ngrok TCP tunnel over internet)     └── post-hoc WPPM fitting
+```
+
+---
+
+## Prerequisites
+
+- Meta Quest 3 or 3s running HorizonOS v74+
+- Unity 6 (or 2022.3 LTS)
+- A PC running the [AEPsych server](https://github.com/Znasif/aepsych) accessible over TCP (e.g. via [ngrok](https://ngrok.com/))
+
+---
+
+## Setup & Running the Experiment
+
+### 1. Start the AEPsych server (on your PC / WSL)
+
+```bash
+conda activate braille
+python aepsych/server/server.py --port 5555 --ip 0.0.0.0
+```
+
+### 2. Expose it via ngrok
+
+```bash
+ngrok tcp 5555
+```
+
+Note the forwarding address, e.g. `0.tcp.ngrok.io:12345`.
+
+### 3. Build and deploy the Unity scene
+
+- Open `Unity-QuestVisionKit` in Unity 6.
+- Navigate to `Assets/Samples/7 Experiment/Experiment Scene.unity`.
+- In the scene, locate the `AEPsychClient` component and enter the ngrok address as the server URL (host + port).
+- Build for Android and deploy to your Quest 3.
+
+### 4. Run the experiment
+
+Put on the Quest. The app will connect to the server and begin presenting trials automatically. Three colored circles appear floating in your mixed-reality space. Press:
+- **Right trigger** — select left circle
+- **B button** — select middle circle
+- **A button** — select right circle
+
+### 5. Monitor progress in real time (optional)
+
+On the PC:
+```bash
+python realtime_visualizer.py
+```
+
+This polls the AEPsych database and shows a live scatter plot of sampled stimuli in model space, colour-coded by response correctness.
+
+---
+
+## AEPsych Configuration
+
+The experiment uses a 4-D parameter space (defined in `ColorConfigGenerator.cs`):
+
+| Parameter | Meaning | Range |
+|-----------|---------|-------|
+| `x0_dim1` | Reference colour, dim 1 (model space) | [-0.7, 0.7] |
+| `x0_dim2` | Reference colour, dim 2 (model space) | [-0.7, 0.7] |
+| `delta_dim1` | Comparison offset, dim 1 | [-0.3, 0.3] |
+| `delta_dim2` | Comparison offset, dim 2 | [-0.3, 0.3] |
+
+Outcome: **1 = correct** (identified the odd one out), **0 = incorrect**.
+Target threshold: **66.7% correct** (`MCLevelSetEstimation`).
+
+Phase 1 (900 trials): Sobol quasi-random initialization.
+Phase 2 (5100 trials): GP-based adaptive sampling.
+
+---
+
+## Key Files
+
+```
+Unity-QuestVisionKit/Assets/
+  Samples/7 Experiment/
+    Experiment Scene.unity          # Main experiment scene
+  Scripts/Experiments/
+    ColorDiscrimination.cs          # 3AFC trial logic, model-space → RGB
+    ColorConfigGenerator.cs         # AEPsych 4-D config
+    StimulusSelectable.cs           # Stimulus interaction handler
+    ColorDelete.cs                  # Cleanup helper
+```
+
+---
+
+## Color Space
+
+Model-space coordinates `(w1, w2)` are transformed to linear RGB via:
+
+```
+RGB = M * [w1, w2, 1]ᵀ
+
+M = [[0.292, -0.292, 0.5],
+     [0.158, -0.158, 0.5],
+     [-0.45,  0.45,  0.5]]
+```
+
+This matrix encodes the isoluminant plane of the display's color gamut.
+
+---
+
+## Related Repository
+
+The Python back-end — AEPsych server, WPPM fitting, simulation scripts, and real-time visualizer — is at:
+
+**[github.com/Znasif/aepsych](https://github.com/Znasif/aepsych)**
+
+---
+
+---
+
+# QuestCameraKit — Original Samples
+
+The rest of this repository is a collection of template and reference projects demonstrating how to use Meta Quest's **Passthrough Camera API (PCA)** for advanced AR/VR vision, tracking, and shader effects. The VisionTest experiment (above) was built on top of this foundation.
 
 [![Follow on X](https://img.shields.io/twitter/follow/xrdevrob?style=social)](https://x.com/xrdevrob)
 [![Join our Discord](https://img.shields.io/badge/Join-Discord-blue?style=social&logo=discord)](https://discord.com/invite/KkstGGwueN)
@@ -66,7 +220,7 @@ https://github.com/user-attachments/assets/a4cfbfc2-0306-40dc-a9a3-cdccffa7afea
 | **Information**        | **Details**                                                                                                                                                                                             |
 |------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Device Requirements**| - Only for Meta `Quest 3` and `3s`<br>- `HorizonOS v74` or later                                                                                                                                        |
-| **Unity WebcamTexture**| - Access through Unity’s WebcamTexture<br>- Only one camera at a time (left or right), a Unity limitation                                                                                               |
+| **Unity WebcamTexture**| - Access through Unity's WebcamTexture<br>- Only one camera at a time (left or right), a Unity limitation                                                                                               |
 | **Android Camera2 API**| - Unobstructed forward-facing RGB cameras<br>- Provides camera intrinsics (`camera ID`, `height`, `width`, `lens translation & rotation`)<br>- Android Manifest: `horizonos.permission.HEADSET_CAMERA`  |
 | **Public Experimental**| - Apps using PCA are allowed to be submitted to the Meta Horizon Store since May 2025.                                                                                                                           |
 | **Specifications**     | - Frame Rate: `30fps`<br>- Image latency: `40-60ms`<br>- Available resolutions per eye: `320x240`, `640x480`, `800x600`, `1280x960`                                                                     |
@@ -84,16 +238,24 @@ https://github.com/user-attachments/assets/a4cfbfc2-0306-40dc-a9a3-cdccffa7afea
 ## Installation
 1. **Clone the Repository:**
    ```
-   git clone https://github.com/xrdevrob/QuestCameraKit.git
+   git clone https://github.com/Znasif/VisionTest.git
+   cd VisionTest
+   git checkout fullview
    ```
 
 2. **Open the Project in Unity:**
-Launch Unity and open the cloned project folder.
+Launch Unity and open the `Unity-QuestVisionKit` folder.
 
 3. **Configure Dependencies:**
 Follow the instructions in the section below to run one of the samples.
 
 # Running the Samples
+
+## 7. **[Color Discrimination Experiment (VisionTest)](https://github.com/Znasif/VisionTest/tree/fullview)**
+- Ensure the [AEPsych server](https://github.com/Znasif/aepsych) is running and reachable (see server setup above).
+- Open `Assets/Samples/7 Experiment/Experiment Scene.unity`.
+- Set the server address on the `AEPsychClient` component.
+- Build and deploy to Quest 3.
 
 ## 1. **[Color Picker](https://github.com/xrdevrob/QuestCameraKit?tab=readme-ov-file#-color-picker)**
 - Open the `ColorPicker` scene.
@@ -103,112 +265,7 @@ Follow the instructions in the section below to run one of the samples.
 ## 2. **[Object Detection with Unity Sentis](https://github.com/xrdevrob/QuestCameraKit?tab=readme-ov-file#-object-detection-with-unity-sentis)**
 - Open the `ObjectDetection` scene.
 - You will need [Unity Sentis](https://docs.unity3d.com/Packages/com.unity.sentis@2.1/manual/get-started.html) for this project to run (com.unity.sentis@2.1.2).
-- Select the labels you would like to track. No label means all objects will be tracked. <details>
-  <summary>Show all available labels</summary>
-  <table>
-    <tr>
-      <td>person</td>
-      <td>bicycle</td>
-      <td>car</td>
-      <td>motorbike</td>
-      <td>aeroplane</td>
-      <td>bus</td>
-      <td>train</td>
-      <td>truck</td>
-    </tr>
-    <tr>
-      <td>boat</td>
-      <td>traffic light</td>
-      <td>fire hydrant</td>
-      <td>stop sign</td>
-      <td>parking meter</td>
-      <td>bench</td>
-      <td>bird</td>
-      <td>cat</td>
-    </tr>
-    <tr>
-      <td>dog</td>
-      <td>horse</td>
-      <td>sheep</td>
-      <td>cow</td>
-      <td>elephant</td>
-      <td>bear</td>
-      <td>zebra</td>
-      <td>giraffe</td>
-    </tr>
-    <tr>
-      <td>backpack</td>
-      <td>umbrella</td>
-      <td>handbag</td>
-      <td>tie</td>
-      <td>suitcase</td>
-      <td>frisbee</td>
-      <td>skis</td>
-      <td>snowboard</td>
-    </tr>
-    <tr>
-      <td>sports ball</td>
-      <td>kite</td>
-      <td>baseball bat</td>
-      <td>baseball glove</td>
-      <td>skateboard</td>
-      <td>surfboard</td>
-      <td>tennis racket</td>
-      <td>bottle</td>
-    </tr>
-    <tr>
-      <td>wine glass</td>
-      <td>cup</td>
-      <td>fork</td>
-      <td>knife</td>
-      <td>spoon</td>
-      <td>bowl</td>
-      <td>banana</td>
-      <td>apple</td>
-    </tr>
-    <tr>
-      <td>sandwich</td>
-      <td>orange</td>
-      <td>broccoli</td>
-      <td>carrot</td>
-      <td>hot dog</td>
-      <td>pizza</td>
-      <td>donut</td>
-      <td>cake</td>
-    </tr>
-    <tr>
-      <td>chair</td>
-      <td>sofa</td>
-      <td>pottedplant</td>
-      <td>bed</td>
-      <td>diningtable</td>
-      <td>toilet</td>
-      <td>tvmonitor</td>
-      <td>laptop</td>
-    </tr>
-    <tr>
-      <td>mouse</td>
-      <td>remote</td>
-      <td>keyboard</td>
-      <td>cell phone</td>
-      <td>microwave</td>
-      <td>oven</td>
-      <td>toaster</td>
-      <td>sink</td>
-    </tr>
-    <tr>
-      <td>refrigerator</td>
-      <td>book</td>
-      <td>clock</td>
-      <td>vase</td>
-      <td>scissors</td>
-      <td>teddy bear</td>
-      <td>hair drier</td>
-      <td>toothbrush</td>
-    </tr>
-  </table>
-</details>
-
+- Select the labels you would like to track. No label means all objects will be tracked.
 - Build the scene and run the APK on your headset. Look around your room and see how tracked objects receive a bounding box in accurate 3D space.
 
 ## 3. **[QR Code Tracking](https://github.com/xrdevrob/QuestCameraKit?tab=readme-ov-file#-qr-code-tracking-with-zxing)**
@@ -225,7 +282,7 @@ Follow the instructions in the section below to run one of the samples.
 - Look at the spheres from different angles and observe how objects behind it are changing.
 - You can grab the examples too and move them around.
 
-> [!WARNING]  
+> [!WARNING]
 > The Meta Project Setup Tool (PST) will show a warning (opaque textures) and tell you to uncheck it, so do not fix this warning.
 
 ## 5. **[OpenAI vision model & voice commands](https://github.com/xrdevrob/QuestCameraKit?tab=readme-ov-file#-openai-vision-model)**
@@ -234,93 +291,6 @@ Follow the instructions in the section below to run one of the samples.
 - Select your desired model and optionally give the LLM some instructions.
 - Make sure your headset is connected to the internet (the faster the better).
 - Build the scene and run the APK on your headset.
-
-> [!NOTE]  
-> File uploads are currently limited to `25 MB` and the following input file types are supported: `mp3`, `mp4`, `mpeg`, `mpga`, `m4a`, `wav`, and `webm`.
-
-You can send commands and receive results in any of these languages:
-<details>
-  <summary>Show all suppported languages</summary>
-<table>
-  <tr>
-    <td>Afrikaans</td>
-    <td>Arabic</td>
-    <td>Armenian</td>
-    <td>Azerbaijani</td>
-    <td>Belarusian</td>
-    <td>Bosnian</td>
-    <td>Bulgarian</td>
-    <td>Catalan</td>
-    <td>Chinese</td>
-  </tr>
-  <tr>
-    <td>Croatian</td>
-    <td>Czech</td>
-    <td>Danish</td>
-    <td>Dutch</td>
-    <td>English</td>
-    <td>Estonian</td>
-    <td>Finnish</td>
-    <td>French</td>
-    <td>Galician</td>
-  </tr>
-  <tr>
-    <td>German</td>
-    <td>Greek</td>
-    <td>Hebrew</td>
-    <td>Hindi</td>
-    <td>Hungarian</td>
-    <td>Icelandic</td>
-    <td>Indonesian</td>
-    <td>Italian</td>
-    <td>Japanese</td>
-  </tr>
-  <tr>
-    <td>Kannada</td>
-    <td>Kazakh</td>
-    <td>Korean</td>
-    <td>Latvian</td>
-    <td>Lithuanian</td>
-    <td>Macedonian</td>
-    <td>Malay</td>
-    <td>Marathi</td>
-    <td>Maori</td>
-  </tr>
-  <tr>
-    <td>Nepali</td>
-    <td>Norwegian</td>
-    <td>Persian</td>
-    <td>Polish</td>
-    <td>Portuguese</td>
-    <td>Romanian</td>
-    <td>Russian</td>
-    <td>Serbian</td>
-    <td>Slovak</td>
-  </tr>
-  <tr>
-    <td>Slovenian</td>
-    <td>Spanish</td>
-    <td>Swahili</td>
-    <td>Swedish</td>
-    <td>Tagalog</td>
-    <td>Tamil</td>
-    <td>Thai</td>
-    <td>Turkish</td>
-    <td>Ukrainian</td>
-  </tr>
-  <tr>
-    <td>Urdu</td>
-    <td>Vietnamese</td>
-    <td>Welsh</td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-  </tr>
-</table>
-</details>
 
 ## 6. **[WebRTC video streaming](https://github.com/xrdevrob/QuestCameraKit?tab=readme-ov-file#-webrtc-video-streaming)**
 
@@ -332,163 +302,24 @@ You can send commands and receive results in any of these languages:
 - Open the `WebRTC-Quest` scene.
 - Link up your signaling server on the `Client-STUNConnection` component in the `Web Socket Server Address` field.
 - Build and deploy the `WebRTC-Quest` scene to your Quest3 device.
-- Open the `WebRTC-SingleClient` scene on your Editor.
-- Build and deploy the `WebRTC-SingleClient` scene to another device or start it from within the Unity Editor. More information can be found [here](https://www.youtube.com/watch?v=-CwJTgt_Z3M)
-- Start the WebRTC app on your Quest and on your other devices. Quest and client streaming devices should connect automatically to the websocket signaling server.
-- Perform the Start gesture with your left hand, or press the menu button on your left controller to start streaming from Quest3 to your WebRTC client app.
-
-**Troubleshooting**:
-- If there are compiler errors, make sure all packages were imported correctly.
-	- Open the `Package Manager`, click on the + sign in the upper left/right corner.
-	- Select "Add package from git URL".
-	- Enter URL: ```https://github.com/endel/NativeWebSocket.git#upm``` and click in Install.
-	- After the installation finished, click on the + sign in the upper left/right corner again.
-	- Enter URL ```https://github.com/FireDragonGameStudio/SimpleWebRTC.git?path=/Assets/SimpleWebRTC``` and click on Install
-	- Use the menu `Tools/Update WebRTC Define Symbol` to update the scripting define symbols if needed.
-- Make sure your own websocket signaling server is up and running. You can find more information about the necessary steps [here](https://youtu.be/-CwJTgt_Z3M?t=1458).
-- If you're going to stream over LAN, make sure the `STUN Server Address` field on `[BuildingBlock] Camera Rig/TrackingSpace/CenterEyeAnchor/Client-STUNConnection` is empty, otherwise leave the default value.
-- Make sure to enable the `Web Socket Connection active` flag on `[BuildingBlock] Camera Rig/TrackingSpace/CenterEyeAnchor/Client-STUNConnection` to connect to the websocket server automatically on start.
-- WebRTC video streaming does **NOT** work, when the **Graphics API** is set to **Vulkan**. Make sure to switch to **OpenGLES3** under `Project Settings/Player`.
-- Make sure to **DISABLE** the **Low Overhead Mode (GLES)** setting for Android in `Project Settings/XR Plug-In Management/Oculus`. Otherwise this optimization will prevent your Quest from sending the video stream to a receiving client.
-
-> [!WARNING] 
-> The Meta Project Setup Tool (PST) will show 3 warnings (opaque textures, low overhead mode GLES and camera stack). Do NOT fix this warnings.
 
 # General Troubleshooting & Known Issues
 
-- Some users have reported that the app crashes the second and every following time the app is opened. A solution described was to go to the Quest settings under `Privacy & Security` and toggle the camera permission and then start the app and accept the permission again. If you encounter this problem please open an issue and send me the crash logs. Thank you!
-- If switching betwenn Unity 6 and other versions such as 2023 or 2022 it can happen that your Android Manifest is getting modified and the app won't run anymore. Should this happen to you make sure to go to `Meta > Tools > Update AndroidManifest.xml` or `Meta > Tools > Create store-compatible AndroidManifest.xml`. After that make sure you add back the `horizonos.permission.HEADSET_CAMERA` manually into your manifest file.
+- Some users have reported that the app crashes the second and every following time the app is opened. A solution described was to go to the Quest settings under `Privacy & Security` and toggle the camera permission and then start the app and accept the permission again.
+- If switching between Unity 6 and other versions such as 2023 or 2022 it can happen that your Android Manifest is getting modified and the app won't run anymore. Should this happen to you make sure to go to `Meta > Tools > Update AndroidManifest.xml` or `Meta > Tools > Create store-compatible AndroidManifest.xml`. After that make sure you add back the `horizonos.permission.HEADSET_CAMERA` manually into your manifest file.
 
 # Acknowledgements & Credits
 
 - Thanks to **Meta** for the Passthrough Camera API and [**Passthrough Camera API Samples**](https://github.com/oculus-samples/Unity-PassthroughCameraApiSamples/).
-- Thanks to shader wizard [Daniel Ilett](https://www.youtube.com/@danielilett) for helping me in the shader samples.
+- Thanks to shader wizard [Daniel Ilett](https://www.youtube.com/@danielilett) for helping in the shader samples.
 - Thanks to **[Michael Jahn](https://github.com/micjahn/ZXing.Net/)** for the XZing.Net library used for the QR code tracking samples.
 - Thanks to **[Julian Triveri](https://github.com/trev3d/QuestDisplayAccessDemo)** for constantly pushing the boundaries with what is possible with Meta Quest hardware and software.
-- Special thanks to [Markus Altenhofer](https://www.linkedin.com/in/markus-altenhofer-176453155/) from [FireDragonGameStudio](https://www.youtube.com/@firedragongamestudio) for contributing the WebRTC sample scene.
-- Special thanks to [Thomas Ratliff](https://x.com/devtom7) for contributing his [shader samples](https://x.com/devtom7/status/1902033672041091453) to the repo.
+- Original QuestCameraKit samples by [XR Dev Rob](https://x.com/xrdevrob).
 
-# Community Highlights
-
-I wanted to dedicate this section to a couple of developers that are doing some great work with Meta Quest and especially the Passthrough Camera API and are actively working on some exciting prototypes:
-
-- [Takashi Yoshinaga](https://x.com/Taka_Yoshinaga): Takashi has been doing amazing explorations in XR and with Meta Quest for a long time. His work focuses mainly on scene understanding and scanning. Takashi has also created his own [GitHub repo](https://github.com/TakashiYoshinaga/QuestArUcoMarkerTracking), showing other developers how to use the Unity OpenCV plugin for marker tracking and more.
-  - [Turning image into colored point cloud](https://x.com/Tks_Yoshinaga/status/1900923909962133782)
-  - [Point cloud data from Quest in real time](https://x.com/taka_yoshinaga/status/1910141763173712333)
-  - [Map color images onto a point cloud by combining Quest's Depth API and Passthrough Camera API](https://x.com/Tks_Yoshinaga/status/1916381129508012107)
-  - [Using Passthrough Camera API with the OpenCV for Unity plugin](https://x.com/Tks_Yoshinaga/status/1901187442084098464)
-  - [OpenCV marker detection for object tracking](https://x.com/taka_yoshinaga/status/1901560686603387255)
-  - [OpenCV marker detection for multiple objects](https://x.com/Taka_Yoshinaga/status/1902700309933371558)
-
-- [Christoph Spinger](https://www.linkedin.com/in/christoph-spinger-280621190/): Christoph was one of the first developers to publicly jump on the the Passthrough Camera API and post his prototypes. He is working on a very interesting and innovative football tracker project. This project uses the Camera2 API because it is slightly faster and less performance-demanding as oppose to Unity's WebCamTexture implementation. The football is tracked according to its color. Color tracking is handled via OpenCV for Unity. A color picker allows the user to directly select the color to be tracked from the object itself. Check out Christoph's work:
-  - [Christoph Spinger](https://www.linkedin.com/in/christoph-spinger-280621190/): [Tracking a real ball and playing some XR football](https://www.linkedin.com/feed/update/urn:li:activity:7314282273791471616/)
-  - [Christoph Spinger](https://www.linkedin.com/in/christoph-spinger-280621190/): [Custom ball-controller for the Meta Quest 3](https://www.linkedin.com/posts/christoph-spinger-280621190_i-just-worked-up-a-real-sweat-playing-vr-activity-7321457451889844225-HiTv?utm_source=share&utm_medium=member_desktop&rcm=ACoAACRDIgYBe94CQK8Ln4nJhdS1WdG2y9aZHYs)
-  - [Christoph Spinger](https://www.linkedin.com/in/christoph-spinger-280621190/): [Chameleon color picker](https://www.linkedin.com/feed/update/urn:li:activity:7306688023843250176/)
-  - [Christoph Spinger](https://www.linkedin.com/in/christoph-spinger-280621190/): [QR code object tracking](https://www.linkedin.com/feed/update/urn:li:activity:7306652200418598912/)
-
-- [Thomas Ratcliff](https://x.com/devtom7): A super talented technical artist you should definitely follow. He has been working on passthrough shaders and lighting estimation.
-  - [Water, blur, zoom shaders](https://x.com/devtom7/status/1901384363658350612)
-  - [Pixelate shader](https://x.com/devtom7/status/1902033672041091453)
-  - [Dynamic reflection data generation](https://x.com/devtom7/status/1913667214399414659)
-  - [Camera based reflection and lighting](https://x.com/devtom7/status/1913965819987366267)
-  
-- [Hugues Bruyère](https://x.com/smallfly): Hugues is showcasing and continuously improving his image capturing and stable diffusion prototype. It demonstartes how to capture multiple images, geenrate new images, and stitch them together.
-  - [MR + Diffusion prototype](https://x.com/smallfly/status/1901403937321750862)
-  - [SAM 2 to our workflow to segment people](https://x.com/smallfly/status/1903560186381377735)
-  - [Mixed Reality + Diffusion prototype as a tool for exploring concepts, styles, and moods by transforming real-world surroundings into alternate realities.](https://x.com/smallfly/status/1916234097724215599)
-
-- [Markus Altenhofer](https://www.linkedin.com/in/markus-altenhofer-176453155/): Markus has been putting out some amazing content around Meta Quest and recently combining it with the Passthrough Camera API. You can find all his work on his YouTube channel [FireDragonGameStudio](https://www.youtube.com/@firedragongamestudio).
-  - [Easy WebRTC video streaming to multiple devices](https://www.youtube.com/watch?v=1R9yrXePJ40)
-  - [Indoor Navigation with QRCode tracking](https://www.youtube.com/watch?v=EUqaOGJxLiY&t)
-  - [XR Minecraft with Meta Quest 3 Depth Sensor and ColorPicker](https://www.youtube.com/watch?v=CNoueOloXNo&t)
-  - [Room detection with Quest 3 Depth Sensor and Object Detection](https://www.youtube.com/watch?v=iimtkRqRxLc)
-
-# Community Contributions
-
-- **Tutorials**
-  - **XR Dev Rob - XR AI Tutorials**, [Watch on YouTube](https://www.youtube.com/watch?v=1z3pcMJbnRA)
-  - **Dilmer Valecillos**, [Watch on YouTube](https://www.youtube.com/watch?v=lhnuP6lJ_yY)
-  - **Skarredghost**, [Watch on YouTube](https://www.youtube.com/watch?v=A2ZhJt-SIBU)
-  - **FireDragonGameStudio**, [Watch on YouTube](https://www.youtube.com/watch?v=1R9yrXePJ40)
-  - **xr masiso**, [Watch on YouTube](https://www.youtube.com/watch?v=FXFgkAmvpgo)
-  - **Urals Technologies**, [Watch on YouTube](https://www.youtube.com/playlist?list=PLU7W-ZU9OIiEanYEKtjyHQIoLrf0SflXx)
-
-- **Object Detection**
-  - [Udayshankar Ravikumar](https://x.com/uralstechCTO): [Unity Sentis Digit Recognition](https://x.com/uralstechCTO/status/1902056175153377353)
-  - [Christoph Spinger](https://www.linkedin.com/in/christoph-spinger-280621190/): [Tracking a real ball and playing some XR football](https://www.linkedin.com/feed/update/urn:li:activity:7314282273791471616/)
-  - [Danyl Bulbas](https://www.linkedin.com/in/danylbulbas/): [XR Chess](https://www.linkedin.com/feed/update/urn:li:activity:7313374042441375745/)
-  - [Christoph Spinger](https://www.linkedin.com/in/christoph-spinger-280621190/): [Custom ball-controller for the Meta Quest 3](https://www.linkedin.com/posts/christoph-spinger-280621190_i-just-worked-up-a-real-sweat-playing-vr-activity-7321457451889844225-HiTv?utm_source=share&utm_medium=member_desktop&rcm=ACoAACRDIgYBe94CQK8Ln4nJhdS1WdG2y9aZHYs)
-
-- **Shaders**
-  - [Thomas Ratcliff](https://x.com/devtom7): [Water, blur, zoom shaders](https://x.com/devtom7/status/1901384363658350612)
-  - [Thomas Ratcliff](https://x.com/devtom7): [Pixelate shader](https://x.com/devtom7/status/1902033672041091453)
-  - [Chukwfumnanya Christoph-Antoine Okafor](https://x.com/covetthatjam): [Frosted Glass Shader](https://x.com/covetthatjam/status/1902423661102923999)
-  - [Bastion](https://x.com/BastionReality): [Glitch Shader](https://x.com/BastionReality)
-
-- **Environment Understanding & Mapping**
-  - [Takashi Yoshinaga](https://x.com/Taka_Yoshinaga): [Turning image into colored point cloud](https://x.com/Tks_Yoshinaga/status/1900923909962133782)
-  - [Alireza Bahremand](https://x.com/lirezaBahremand): [Quest Passthrough to MAST3R-SLAM for scene ply distribution](https://x.com/lirezaBahremand/status/1901665472069902772)
-  - [うえださん](https://x.com/ueda406): [3D Scanner](https://x.com/ueda406/status/1904771581135774042)
-  - [Sander Sneek](https://www.linkedin.com/in/sandersneek/): [Mixed Reality Voxel Demo](https://www.linkedin.com/feed/update/urn:li:activity:7312869115583414273/)
-  - [Takashi Yoshinaga](https://x.com/Taka_Yoshinaga): [Point cloud data from Quest in real time](https://x.com/taka_yoshinaga/status/1910141763173712333)
-  - [Bastion](https://x.com/BastionReality): [Sobel edge detection + passthrough camera + R6 Lion scan SFX](https://x.com/BastionReality/status/1912358908804333844)
-  - [Takashi Yoshinaga](https://x.com/Taka_Yoshinaga): [Map color images onto a point cloud by combining Quest's Depth API and Passthrough Camera API](https://x.com/Tks_Yoshinaga/status/1916381129508012107)
-
-- **Lighting and Reflection Estimation**
-  - [pjchardt on Reddit](https://www.reddit.com/user/pjchardt/): [Prototype combining real lights and virtual objects using light estimation to affect 3d environment.](https://www.reddit.com/r/OculusQuest/comments/1jlvy3o/meta_quest_cameraapi_prototype_combining_real/)
-  - [Thomas Ratcliff](https://x.com/devtom7): [Dynamic reflection data generation](https://x.com/devtom7/status/1913667214399414659)
-  - [Thomas Ratcliff](https://x.com/devtom7): [Camera based reflection and lighting](https://x.com/devtom7/status/1913965819987366267)
-
-- **Environment Sampling**
-  - [Christoph Spinger](https://www.linkedin.com/in/christoph-spinger-280621190/): [Chameleon color picker](https://www.linkedin.com/feed/update/urn:li:activity:7306688023843250176/)
-  - [Sid Naik](https://www.linkedin.com/in/sidharthrnaik/): [Copy and paste the lighting in his house](https://www.linkedin.com/posts/sidharthrnaik_augmentedreality-virtualreality-vr-activity-7307523483318566912-NpGr/?utm_source=share&utm_medium=member_ios&rcm=ACoAACRDIgYBe94CQK8Ln4nJhdS1WdG2y9aZHYs)
-  - [Markus Altenhofer](https://www.linkedin.com/in/markus-altenhofer-176453155/): [XR Minecraft with Meta Quest 3 Depth Sensor and ColorPicker](https://www.youtube.com/watch?v=CNoueOloXNo)
-
-- **Image to 3D**
-  - [Takahiro Horikawa](https://x.com/thorikawa): [Replicate real objects into 3D](https://x.com/thorikawa/status/1901545245944455409)
-  - [Matt Hudson](https://x.com/mechpil0t): [Augmented Reality clones](https://x.com/mechpil0t/status/1902879317803294773)
-  - [Aman Bohra](https://www.linkedin.com/in/amanbohra/): [Turning drawings into 3D models](https://www.linkedin.com/feed/update/urn:li:activity:7310875897278918656/)
-
-- **Image to Image, Diffusion & Generation**
-  - [Hugues Bruyère](https://x.com/smallfly): [MR + Diffusion prototype](https://x.com/smallfly/status/1901403937321750862)
-  - [Hugues Bruyère](https://x.com/smallfly): [SAM 2 to our workflow to segment people](https://x.com/smallfly/status/1903560186381377735)
-  - [水マヨ](https://x.com/mizzmayo): [AI image description](https://x.com/mizzmayo/status/1901855438083359120)
-  - [妹尾雄大](https://x.com/senooyudai): [Img2Img process of SDXL](https://x.com/senooyudai/status/1900799052054491421)
-  - [Rolando Masís-Obando](https://www.linkedin.com/in/rmasiso): [Image to image with LCM and SDXL Turbo](https://www.linkedin.com/feed/update/urn:li:activity:7307797312158789632/)
-  - [Hugues Bruyère](https://x.com/smallfly): [Mixed Reality + Diffusion prototype as a tool for exploring concepts, styles, and moods by transforming real-world surroundings into alternate realities.](https://x.com/smallfly/status/1916234097724215599)
- 
-- Video recording and replay
-  - [Lucas Martinic](https://x.com/lucas_martinic): [Rewind what you saw](https://x.com/lucas_martinic/status/1902700951728693618)
-
-- **OpenCV for Unity**
-  - [Takashi Yoshinaga](https://x.com/Taka_Yoshinaga): [Using Passthrough Camera API with the OpenCV for Unity plugin](https://x.com/Tks_Yoshinaga/status/1901187442084098464)
-  - [Takashi Yoshinaga](https://x.com/Taka_Yoshinaga): [OpenCV marker detection for object tracking](https://x.com/taka_yoshinaga/status/1901560686603387255)
-  - [Takashi Yoshinaga](https://x.com/Taka_Yoshinaga): [OpenCV marker detection for multiple objects](https://x.com/Taka_Yoshinaga/status/1902700309933371558). You can find this project on his [GitHub Repo](https://github.com/TakashiYoshinaga/QuestArUcoMarkerTracking)
-  - [Aurelio Puerta Martín](https://x.com/aurepuerta_dev): [OpenCV with multiple trackers](https://x.com/aurepuerta_dev/status/1905220037167751675)
-  - [くりやま@システム開発](https://x.com/xamel7): [Positioning 3D objects on markers](https://x.com/xamel7/status/1904400697577394181)
-
-- **QR Code Tracking**
-  - [Christoph Spinger](https://www.linkedin.com/in/christoph-spinger-280621190/): [QR code object tracking](https://www.linkedin.com/feed/update/urn:li:activity:7306652200418598912/)
- 
-# News
-
-- (Mar 21 2025) The Mysticle - [One of Quests Most Exciting Updates is Now Here!](https://www.youtube.com/watch?v=dG1rxxVDb9Y)
-- (Mar 18 2025) Road to VR - [Meta Releases Quest Camera Access for Developers, Promising Even More Immersive MR Games](https://www.roadtovr.com/meta-releases-quest-camera-access-for-developers-promising-even-more-immersive-mixed-reality-games/)
-- (Mar 17 2025) MIXED Reality News - [Quest developers get new powerful API for mixed reality apps](https://mixed-news.com/en/meta-quest-3-passthrough-camera-api-experimental-release/)
-- (Mar 14 2025) UploadVR - [Quest's Passthrough Camera API Is Out Now, Though Store Apps Can't Yet Use It](https://www.uploadvr.com/quest-passthrough-camera-api-experimental-out-now/)
- 
 # License
 
-This project is licensed under the MIT License. See the LICENSE file for details. Feel free to use the samples for your own projects, though I would appreciate if you would leave some credits to this repo in your work ❤️
+This project is licensed under the MIT License. See the LICENSE file for details.
 
 # Contact
 
-For questions, suggestions, or feedback, please open an issue in the repository or contact me on [X](https://x.com/xrdevrob), [LinkedIn](https://www.linkedin.com/in/robertocoviello/), or at [roberto@blackwhale.dev](mailto:roberto@blackwhale.dev). Find all my info [here](https://bento.me/xrdevrob) or join our growing XR developer community on [Discord](https://discord.gg/KkstGGwueN).
-
-[![Sponsor](https://img.shields.io/badge/Sponsor-❤️-FF69B4.svg)](https://github.com/sponsors/xrdevrob)
-[![Support on Patreon](https://img.shields.io/badge/Become%20a%20Patron-orange?logo=patreon&style=flat-square)](https://www.patreon.com/c/blackwhalestudio)
-
---------------------------------------------------------------------------------
-Happy coding and enjoy exploring the possibilities with QuestCameraKit!
-
---------------------------------------------------------------------------------
+For questions about the VisionTest experiment, open an issue at [github.com/Znasif/VisionTest](https://github.com/Znasif/VisionTest) or [github.com/Znasif/aepsych](https://github.com/Znasif/aepsych).
