@@ -19,7 +19,7 @@ This project implements an immersive, headset-based stimulus presentation front-
 
 ## What the Experiment Looks Like
 
-![WPPM fitted threshold ellipses](https://raw.githubusercontent.com/Znasif/aepsych/main/WPPM.gif)
+![WPPM Stimuli Presentation in Meta Quest 3](Quest.gif)
 
 The participant sees three colored circles in mixed reality. Two are the **reference** color and one is the **comparison** (odd one out). The task is to identify which circle is different. Responses are sent back to the AEPsych server to update the GP model and select the next trial.
 
